@@ -9,14 +9,22 @@ import { ToastController } from '@ionic/angular';
   templateUrl: 'lista.page.html',
   styleUrls: ['lista.page.scss'],
 })
+
 export class ListaPage {
-  tarefas: Tarefa[] = [
+  
+  tarefas: Tarefa[] = [];
+  
+  constructor(private alertController: AlertController, private toastController: ToastController) {
 
-  ];
+    let arrayTarefasString = localStorage.getItem('TarefasDB');
+  
+    if (arrayTarefasString != null) {
+      this.tarefas = JSON.parse(arrayTarefasString);
+    }
 
-  constructor(private alertController: AlertController, private toastController: ToastController) { }
-
-  async criarNovaTarefa() {
+  }
+  
+  async newTask() {
     const alert = await this.alertController.create({
       header: 'Nova Tarefa',
       inputs: [
@@ -29,67 +37,26 @@ export class ListaPage {
       buttons: [
         {
           text: 'Cancelar',
-          handler: () => {console.log('Criação de tarefa cancelada');},
+          handler: () => {console.log('Criação de tarefa cancelada.');},
         },
         {
           text: 'Adicionar',
           handler: (form) => {
             let obj = {id: this.getId(this.tarefas),descricao: form.task, status: false};
             this.tarefas.push(obj);
-
+            
             console.log('id' + obj.id)
+            
+            localStorage.setItem('TarefasDB', JSON.stringify(this.tarefas));
           }
         }
       ]
     });
-  
+    
     await alert.present();
   }
-
-  // async criarNovaTarefa() {
-  //   const alert = await this.alertController.create({
-  //     header: 'Nova Tarefa',
-  //     inputs: [
-  //       {
-  //         name: 'task',
-  //         type: 'text',
-  //         placeholder: 'Nome da Tarefa',
-  //       },
-  //     ],
-  //     buttons: [
-  //       {
-  //         text: 'Cancelar',
-  //         handler: () => { console.log('Criação de tarefa cancelada'); },
-  //       },
-  //       {
-  //         text: 'Adicionar',
-  //         handler: (form) => {
-
-  //           const id = this.tarefas.length + 1;
-  //           const descricao = form.task.trim();
   
-  //           if (descricao !== '') {
-  //             const obj = { id, descricao, status: false };
-  //             this.tarefas.push(obj);
-              
-              
-  
-  //             console.log('ID: ' + obj.id);
-  //           } else {
-              
-  //             console.log('A descrição da tarefa não pode estar vazia');
-  //             this.mostrarNotificacao('Adicione um nome para a tarefa ;D')
-  //           }
-  //         },
-  //       },
-  //     ],
-  //   });
-  
-  //   await alert.present();
-  // }
-  
-
-  async editarItem(tarefa: Tarefa) {
+  async editTask(tarefa: Tarefa) {
     const alert = await this.alertController.create({
       header: 'Editar Tarefa',
       inputs: [
@@ -109,16 +76,16 @@ export class ListaPage {
           text: 'Salvar',
           handler: (data) => {
             tarefa.descricao = data.newName;
+            localStorage.setItem('TarefasDB', JSON.stringify(this.tarefas));
           },
         },
       ],
     });
-  
+    
     await alert.present();
   }
   
-
-  async apagarItem(tarefa: Tarefa) {
+  async delTask(tarefa: Tarefa) {
     const alert = await this.alertController.create({
       header: 'Excluir Tarefa',
       message: `Tem certeza de que deseja excluir a tarefa "${tarefa.descricao}"?`,
@@ -133,67 +100,36 @@ export class ListaPage {
             const excluir = this.tarefas.indexOf(tarefa);
             if (excluir !== -1) {
               this.tarefas.splice(excluir, 1);
-              this.mostrarNotificacao('Tarefa excluída com sucesso');
+
+              localStorage.setItem('TarefasDB', JSON.stringify(this.tarefas));
+
+              this.showNotify('Tarefa excluída com sucesso!');
             }
           },
         },
       ],
     });
-  
+    
     await alert.present();
   }
   
-
-  
-  
-
-  // async apagarItem(tarefa: Tarefa) {
-  //   const alert = await this.alertController.create({
-  //     header: 'Excluir Tarefa',
-  //     message: `Tem certeza de que deseja excluir a tarefa "${tarefa.descricao}"?`,
-  //     buttons: [
-  //       {
-  //         text: 'Cancelar',
-  //         role: 'cancel',
-  //       },
-  //       {
-  //         text: 'Excluir',
-  //         handler: () => {
-  //           const excluir = this.tarefas.indexOf(tarefa);
-  //           if (excluir !== -1) {
-  //             this.tarefas.splice(excluir, 1);
-  //           }
-  //         },
-  //       },
-  //     ],
-  //   });
-  
-  //   await alert.present();
-  // }
-
-  // apagarItem(id: number){
-  //   let index = this.tarefas.findIndex((tarefa) => {tarefa.id == id});
-
-  //   this.tarefas.splice(index, 1)
-  // }
-
-  async mostrarNotificacao(mensagem: string) {
+  async showNotify(mensagem: string) {
     const toast = await this.toastController.create({
       message: mensagem,
       duration: 2000, 
       position: 'bottom',
     });
-  
+    
     toast.present();
   }
   
   check(tarefa: Tarefa) {
     tarefa.status = !tarefa.status;
   }
-
+  
   getId(dados: Tarefa[]): number {
     let tamanho:number = (dados.length) + 1;
-
+    
     return tamanho;
   }
   
